@@ -1874,8 +1874,8 @@ def get_estudiantes_para_reengagement() -> list[dict]:
     from datetime import datetime as _dt, timedelta
     now = _dt.now(timezone.utc)
     umbral_1d = (now - timedelta(days=1)).isoformat()
-    umbral_2d = (now - timedelta(days=2)).isoformat()
-    umbral_5d = (now - timedelta(days=5)).isoformat()
+    umbral_2d = (now - timedelta(days=1)).isoformat()
+    umbral_5d = (now - timedelta(days=3)).isoformat()
 
     if _use_supabase():
         sb = _get_supabase()
