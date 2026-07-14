@@ -1,0 +1,42 @@
+name: Re-engagement Diario Piloto Raíz
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 14:00 UTC (9:00 AM hora de Colombia)
+    - cron: '0 14 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  procesar_reengagement:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+
+      - name: Crear archivo de secretos temporal
+        run: |
+          mkdir -p .streamlit
+          cat << EOF > .streamlit/secrets.toml
+          SUPABASE_URL = "${{ secrets.SUPABASE_URL }}"
+          SUPABASE_SERVICE_KEY = "${{ secrets.SUPABASE_SERVICE_KEY }}"
+          TWILIO_ACCOUNT_SID = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          TWILIO_AUTH_TOKEN = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          TWILIO_WHATSAPP_NUMBER = "${{ secrets.TWILIO_WHATSAPP_NUMBER }}"
+          CELULAR_ENCRYPTION_KEY = "${{ secrets.CELULAR_ENCRYPTION_KEY }}"
+          APP_URL = "${{ secrets.APP_URL }}"
+          EOF
+
+      - name: Ejecutar envío de re-engagement
+        run: |
+          python enviar_reengagement_diario.py
