@@ -92,7 +92,8 @@ import re as _re
 _PATRON_ETIQUETAS = _re.compile(
     r"\[\s*(?:FIN_CONSEJERIA|RIESGO_BAJO|RIESGO_MEDIO|RIESGO_ALTO"
     r"|ALERTA_ORIENTADOR_REQUERIDA|ALERTA_PSICOLOGICA_CRITICA"
-    r"|INICIAR_RONDA_RELAMPAGO)\s*\]"
+    r"|INICIAR_RONDA_RELAMPAGO"
+    r"|PROGRESO:S\d+M\d+)\s*\]"
     r"|Nota interna de rAÍz\s*:?[^\n]*"
     r"|Nota interna\s*:[^\n]*"
     r"|\(\)",
@@ -155,6 +156,18 @@ def _procesar_etiquetas(raw: str, est: dict, sesion_actual: int) -> bool:
             db.update_perfil_riesgo(est["id"], nivel)
             st.session_state.estudiante["perfil_riesgo"] = nivel
             break
+
+    # ── Progreso pedagógico ────────────────────────────────────────────────
+    progreso_match = _re.search(r"\[PROGRESO:S(\d+)M(\d+)\]", raw)
+    if progreso_match:
+        nueva_sesion = int(progreso_match.group(1))
+        nuevo_momento = int(progreso_match.group(2))
+        sesion_prev = est.get("sesion_actual", 1)
+        momento_prev = est.get("momento_actual", 1)
+        if nueva_sesion != sesion_prev or nuevo_momento != momento_prev:
+            db.update_progreso(est["id"], nueva_sesion, nuevo_momento)
+            st.session_state.estudiante["sesion_actual"] = nueva_sesion
+            st.session_state.estudiante["momento_actual"] = nuevo_momento
 
     # ── Fin de mentoría ────────────────────────────────────────────────────────
     if "[FIN_CONSEJERIA]" in raw:
